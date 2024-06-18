@@ -1,0 +1,9 @@
+{
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "go.mod": "go.sum"
+  },
+  "files.exclude": {
+    "tmp": true
+  }
+}
