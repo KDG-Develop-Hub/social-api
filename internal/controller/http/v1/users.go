@@ -23,11 +23,12 @@ func NewUserRoutes(e *echo.Group, u service.UserService, l *zerolog.Logger) {
 
 func (r *userRoutes) create(c echo.Context) error {
 	request := domain.User{
-		Username: c.FormValue("username"),
-		Password: c.FormValue("password"),
-		Email:    c.FormValue("email"),
+		Username:    c.FormValue("username"),
+		DisplayName: c.FormValue("display_name"),
+		Password:    c.FormValue("password"),
+		Email:       c.FormValue("email"),
 	}
-	err := r.u.Register(request)
+	err := r.u.Register(request.Username, request.DisplayName, request.Email, request.Password)
 	if err != nil {
 		if errors.Is(response.ErrResourceAlreadyExists, err) {
 			res := response.WithErrors{Errors: []string{err.Error()}}

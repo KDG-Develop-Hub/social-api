@@ -5,8 +5,6 @@ type Media struct {
 	FileName  string
 	FilePath  string
 	Alt       string
-	Width     int
-	Height    int
 	CreatedAt string
 	UpdatedAt string
 	DeletedAt string
