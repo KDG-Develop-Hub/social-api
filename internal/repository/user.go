@@ -29,7 +29,7 @@ func (r *userRepo) Create(username, displayName, password, email string) error {
 	if err != nil {
 		return response.ErrInternalServer
 	}
-	_, err = r.db.Exec("INSERT INTO users (username, displayName ,password, email) VALUES ($1, $2, $3, $4)", username, displayName, hashed, email)
+	_, err = r.db.Exec("INSERT INTO users (username, display_name ,password, email) VALUES ($1, $2, $3, $4)", username, displayName, hashed, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return response.ErrResourceAlreadyExists
