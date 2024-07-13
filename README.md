@@ -5,9 +5,7 @@
 ```shell
 # パッケージと必要なコマンドをインストール
 make install
-```
 
-```shell
 # Makefileを実行
 make run
 ```
