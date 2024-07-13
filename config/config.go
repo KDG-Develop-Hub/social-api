@@ -8,8 +8,10 @@ import (
 )
 
 type (
-	Config struct {
-		DB Database `env-prefix:"DB_"`
+	Environment string
+	Config      struct {
+		Env Environment `env:"ENV" env-default:"development"`
+		DB  Database    `env-prefix:"DB_"`
 	}
 	Database struct {
 		Host     string `env:"HOST" env-required:"true"`
@@ -19,6 +21,11 @@ type (
 		Name     string `env:"NAME" env-required:"true"`
 		SslMode  string `env:"SSL_MODE" env-required:"true"`
 	}
+)
+
+const (
+	Development Environment = "development"
+	Production  Environment = "production"
 )
 
 func MustLoad() *Config {
