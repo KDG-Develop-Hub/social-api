@@ -1,17 +1,17 @@
 package v1
 
 import (
-	"github.com/kdg-develop-hub/api/internal/service"
+	"github.com/kdg-develop-hub/api/internal/services"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 )
 
 type userRoutes struct {
-	u service.UserService
+	u services.UserService
 	l *zerolog.Logger
 }
 
-func NewUserRoutes(e *echo.Group, u service.UserService, l *zerolog.Logger) {
+func NewUserRoutes(e *echo.Group, u services.UserService, l *zerolog.Logger) {
 	r := &userRoutes{u: u, l: l}
 	g := e.Group("/users")
 	g.POST("", r.create)

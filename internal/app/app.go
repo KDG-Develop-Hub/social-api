@@ -7,9 +7,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/kdg-develop-hub/api/config"
-	v1 "github.com/kdg-develop-hub/api/internal/controller/http/v1"
-	"github.com/kdg-develop-hub/api/internal/repository"
-	"github.com/kdg-develop-hub/api/internal/service"
+	v1 "github.com/kdg-develop-hub/api/internal/controllers/http/v1"
+	"github.com/kdg-develop-hub/api/internal/repositories"
+	"github.com/kdg-develop-hub/api/internal/services"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
@@ -93,9 +93,9 @@ func (app *app) Run() {
 
 	// router
 	{
-		ur := repository.NewUserRepository(dbx)
+		ur := repositories.NewUserRepository(dbx)
 
-		us := service.NewUserService(ur)
+		us := services.NewUserService(ur)
 
 		v1.NewRouter(e, &log, us)
 	}
