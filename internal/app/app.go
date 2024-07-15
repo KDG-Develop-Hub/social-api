@@ -54,42 +54,47 @@ func (app *app) Run() {
 	e.Use(middleware.Recover())
 
 	// sql
-	var driver string
-	var source string
+	var dbx *sqlx.DB
+	{
+		var driver string
+		var source string
 
-	switch app.cfg.Env {
-	case config.Production:
-		driver = "postgres"
-		source = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-			app.cfg.DB.Host,
-			app.cfg.DB.Port,
-			app.cfg.DB.User,
-			app.cfg.DB.Password,
-			app.cfg.DB.Name,
-			app.cfg.DB.SslMode,
-		)
-	case config.Development:
-		driver = "sqlite3"
-		source = "db/development.sqlite3"
-	}
-	db, err := sql.Open(driver, source)
-	if err != nil {
-		log.Fatal().Err(err).Msg("DB connection failed")
-	}
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Fatal().Err(err).Msg("DB close failed")
+		switch app.cfg.Env {
+		case config.Production:
+			driver = "postgres"
+			source = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+				app.cfg.DB.Host,
+				app.cfg.DB.Port,
+				app.cfg.DB.User,
+				app.cfg.DB.Password,
+				app.cfg.DB.Name,
+				app.cfg.DB.SslMode,
+			)
+		case config.Development:
+			driver = "sqlite3"
+			source = "db/development.sqlite3"
 		}
-	}()
-	if err = db.Ping(); err != nil {
-		log.Fatal().Err(err).Msg("DB ping failed")
+
+		db, err := sql.Open(driver, source)
+		if err != nil {
+			log.Err(err).Msg("DB connection failed")
+		}
+
+		defer func() {
+			if err := db.Close(); err != nil {
+				log.Err(err).Msg("DB close failed")
+			}
+		}()
+		if err = db.Ping(); err != nil {
+			log.Err(err).Msg("DB ping failed")
+		}
+		db = sqldblogger.OpenDriver(
+			source,
+			db.Driver(),
+			zerologadapter.New(log),
+		)
+		dbx = sqlx.NewDb(db, driver)
 	}
-	db = sqldblogger.OpenDriver(
-		source,
-		db.Driver(),
-		zerologadapter.New(log),
-	)
-	dbx := sqlx.NewDb(db, driver)
 
 	// router
 	{
