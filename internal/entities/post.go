@@ -1,9 +1,9 @@
-package domain
+package entities
 
 type Post struct {
 	ID        int
 	Content   string
-	MediaIDs  []int
+	MediaURLs []string
 	AuthorID  int
 	CreatedAt string
 	UpdatedAt string

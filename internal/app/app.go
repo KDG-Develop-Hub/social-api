@@ -3,18 +3,20 @@ package app
 import (
 	"database/sql"
 	"fmt"
+	"os"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/kdg-develop-hub/api/config"
-	v1 "github.com/kdg-develop-hub/api/internal/controller/http/v1"
-	"github.com/kdg-develop-hub/api/internal/repository"
-	"github.com/kdg-develop-hub/api/internal/service"
+	v1 "github.com/kdg-develop-hub/api/internal/controllers/http/v1"
+	"github.com/kdg-develop-hub/api/internal/repositories"
+	"github.com/kdg-develop-hub/api/internal/services"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	sqldblogger "github.com/simukti/sqldb-logger"
 	"github.com/simukti/sqldb-logger/logadapter/zerologadapter"
-	"os"
 )
 
 type app struct {
@@ -52,38 +54,53 @@ func (app *app) Run() {
 	e.Use(middleware.Recover())
 
 	// sql
-	dns := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		app.cfg.DB.Host,
-		app.cfg.DB.Port,
-		app.cfg.DB.User,
-		app.cfg.DB.Password,
-		app.cfg.DB.Name,
-		app.cfg.DB.SslMode,
-	)
-	db, err := sql.Open("postgres", dns)
-	if err != nil {
-		log.Fatal().Err(err).Msg("DB connection failed")
-	}
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Fatal().Err(err).Msg("DB close failed")
+	var dbx *sqlx.DB
+	{
+		var driver string
+		var source string
+
+		switch app.cfg.Env {
+		case config.Production:
+			driver = "postgres"
+			source = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+				app.cfg.DB.Host,
+				app.cfg.DB.Port,
+				app.cfg.DB.User,
+				app.cfg.DB.Password,
+				app.cfg.DB.Name,
+				app.cfg.DB.SslMode,
+			)
+		case config.Development:
+			driver = "sqlite3"
+			source = "db/development.sqlite3"
 		}
-	}()
-	if err = db.Ping(); err != nil {
-		log.Fatal().Err(err).Msg("DB ping failed")
+
+		db, err := sql.Open(driver, source)
+		if err != nil {
+			log.Err(err).Msg("DB connection failed")
+		}
+
+		defer func() {
+			if err := db.Close(); err != nil {
+				log.Err(err).Msg("DB close failed")
+			}
+		}()
+		if err = db.Ping(); err != nil {
+			log.Err(err).Msg("DB ping failed")
+		}
+		db = sqldblogger.OpenDriver(
+			source,
+			db.Driver(),
+			zerologadapter.New(log),
+		)
+		dbx = sqlx.NewDb(db, driver)
 	}
-	db = sqldblogger.OpenDriver(
-		dns,
-		db.Driver(),
-		zerologadapter.New(log),
-	)
-	dbx := sqlx.NewDb(db, "postgres")
 
 	// router
 	{
-		ur := repository.NewUserRepository(dbx)
+		ur := repositories.NewUserRepository(dbx)
 
-		us := service.NewUserService(ur)
+		us := services.NewUserService(ur)
 
 		v1.NewRouter(e, &log, us)
 	}

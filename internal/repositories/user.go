@@ -1,10 +1,10 @@
-package repository
+package repositories
 
 import (
 	"database/sql"
 	"errors"
 	"github.com/jmoiron/sqlx"
-	"github.com/kdg-develop-hub/api/internal/domain"
+	"github.com/kdg-develop-hub/api/internal/entities"
 	"github.com/kdg-develop-hub/api/pkg/response"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -16,8 +16,8 @@ type userRepo struct {
 type UserRepository interface {
 	Create(username, displayName, email, password string) error
 	Authenticate(email, password string) error
-	FindByID(id int) (domain.User, error)
-	SearchByUsername(username string) ([]domain.User, error)
+	FindByID(id int) (entities.User, error)
+	SearchByUsername(username string) ([]entities.User, error)
 }
 
 func NewUserRepository(db *sqlx.DB) UserRepository {
@@ -29,7 +29,7 @@ func (r *userRepo) Create(username, displayName, password, email string) error {
 	if err != nil {
 		return response.ErrInternalServer
 	}
-	_, err = r.db.Exec("INSERT INTO users (username, displayName ,password, email) VALUES ($1, $2, $3, $4)", username, displayName, hashed, email)
+	_, err = r.db.Exec("INSERT INTO users (username, display_name ,password, email) VALUES ($1, $2, $3, $4)", username, displayName, hashed, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return response.ErrResourceAlreadyExists
@@ -40,7 +40,7 @@ func (r *userRepo) Create(username, displayName, password, email string) error {
 }
 
 func (r *userRepo) Authenticate(email, password string) error {
-	var u domain.User
+	var u entities.User
 	err := r.db.Get(&u, "SELECT password FROM users WHERE email = $1", email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -58,8 +58,8 @@ func (r *userRepo) Authenticate(email, password string) error {
 	return nil
 }
 
-func (r *userRepo) FindByID(id int) (domain.User, error) {
-	var u domain.User
+func (r *userRepo) FindByID(id int) (entities.User, error) {
+	var u entities.User
 	err := r.db.Get(&u, "SELECT * FROM users WHERE id = $1", id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -70,8 +70,8 @@ func (r *userRepo) FindByID(id int) (domain.User, error) {
 	return u, nil
 }
 
-func (r *userRepo) SearchByUsername(username string) ([]domain.User, error) {
-	var users []domain.User
+func (r *userRepo) SearchByUsername(username string) ([]entities.User, error) {
+	var users []entities.User
 	err := r.db.Select(&users, "SELECT * FROM users WHERE username LIKE $1", "%"+username+"%")
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

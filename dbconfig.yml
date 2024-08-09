@@ -1,0 +1,10 @@
+development:
+    dialect: sqlite3
+    dir: db/migrations
+    datasource: db/development.sqlite3
+
+production:
+    dialect: postgres
+    dir: db/migrations
+    datasource: host={DB_HOST} port={DB_PORT} user={DB_USER} password={DB_PASSWORD} dbname={DB_NAME} sslmode={DB_SSLMODE}
+    table: production
